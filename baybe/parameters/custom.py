@@ -15,6 +15,7 @@ from baybe.utils.boolean import eq_dataframe
 from baybe.utils.dataframe import df_uncorrelated_features
 from baybe.utils.numerical import DTypeFloatNumpy
 
+VERBOSE = True
 
 @define(frozen=True, slots=False)
 class CustomDiscreteParameter(DiscreteParameter):
@@ -107,9 +108,15 @@ class CustomDiscreteParameter(DiscreteParameter):
 
         # Get a decorrelated subset of the provided features
         if self.decorrelate:
+            if VERBOSE:
+                print(f"\nDecorrelating {self.name} custom features with threshold {self.decorrelate} ...")
+                print(f"Original number of features: {comp_df.shape[1]}")
             if isinstance(self.decorrelate, bool):
                 comp_df = df_uncorrelated_features(comp_df)
             else:
                 comp_df = df_uncorrelated_features(comp_df, threshold=self.decorrelate)
-
+            if VERBOSE:
+                print(f"Number of decorrelated features: {comp_df.shape[1]}\n")
+                print("List of decorrelated features:")
+                print(comp_df.columns.tolist())
         return comp_df

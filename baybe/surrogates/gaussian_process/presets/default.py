@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from baybe.kernels.base import Kernel
     from baybe.searchspace.core import SearchSpace
 
+VERBOSE = False
 
 @define
 class DefaultKernelFactory(KernelFactory):
@@ -37,34 +38,46 @@ class DefaultKernelFactory(KernelFactory):
         mordred = (searchspace.contains_mordred or searchspace.contains_rdkit) and (
             train_x.shape[-1] >= 50
         )
+        lengthscale_prior = GammaPrior(2.0, 0.2)
+        lengthscale_initial_value = 5.0
+        outputscale_prior = GammaPrior(5.0, 0.5)
+        outputscale_initial_value = 8.0
 
-        # low D priors
-        if train_x.shape[-1] < 10:  # <-- different condition compared to EDBO
-            lengthscale_prior = GammaPrior(1.2, 1.1)
-            lengthscale_initial_value = 0.2
-            outputscale_prior = GammaPrior(5.0, 0.5)
-            outputscale_initial_value = 8.0
+        # # low D priors 
+        # if train_x.shape[-1] < 10:  # <-- different condition compared to EDBO
+        #     lengthscale_prior = GammaPrior(1.2, 1.1)
+        #     lengthscale_initial_value = 0.2
+        #     outputscale_prior = GammaPrior(5.0, 0.5)
+        #     outputscale_initial_value = 8.0
+        #     if VERBOSE:
+        #         print("Low D priors")
 
-        # DFT optimized priors
-        elif mordred and train_x.shape[-1] < 100:
-            lengthscale_prior = GammaPrior(2.0, 0.2)
-            lengthscale_initial_value = 5.0
-            outputscale_prior = GammaPrior(5.0, 0.5)
-            outputscale_initial_value = 8.0
+        # # DFT optimized priors
+        # elif mordred and train_x.shape[-1] < 100:
+        #     lengthscale_prior = GammaPrior(2.0, 0.2)
+        #     lengthscale_initial_value = 5.0
+        #     outputscale_prior = GammaPrior(5.0, 0.5)
+        #     outputscale_initial_value = 8.0
+        #     if VERBOSE:
+        #         print("DFT optimized priors")
 
-        # Mordred optimized priors
-        elif mordred:
-            lengthscale_prior = GammaPrior(2.0, 0.1)
-            lengthscale_initial_value = 10.0
-            outputscale_prior = GammaPrior(2.0, 0.1)
-            outputscale_initial_value = 10.0
+        # # Mordred optimized priors
+        # elif mordred:
+        #     lengthscale_prior = GammaPrior(2.0, 0.1)
+        #     lengthscale_initial_value = 10.0
+        #     outputscale_prior = GammaPrior(2.0, 0.1)
+        #     outputscale_initial_value = 10.0
+        #     if VERBOSE:
+        #         print("Mordred optimized priors")
 
-        # OHE optimized priors
-        else:
-            lengthscale_prior = GammaPrior(3.0, 1.0)
-            lengthscale_initial_value = 2.0
-            outputscale_prior = GammaPrior(5.0, 0.2)
-            outputscale_initial_value = 20.0
+        # # OHE optimized priors
+        # else:
+        #     lengthscale_prior = GammaPrior(3.0, 1.0)
+        #     lengthscale_initial_value = 2.0
+        #     outputscale_prior = GammaPrior(5.0, 0.2)
+        #     outputscale_initial_value = 20.0
+        #     if VERBOSE:
+        #         print("OHE optimized priors")
 
         return ScaleKernel(
             MaternKernel(
@@ -75,6 +88,38 @@ class DefaultKernelFactory(KernelFactory):
             outputscale_prior=outputscale_prior,
             outputscale_initial_value=outputscale_initial_value,
         )
+
+        # low D priors 
+        if train_x.shape[-1] < 1000:  # <-- different condition compared to EDBO # MM: changed from 10 to 1000
+            lengthscale_prior = GammaPrior(1.2, 1.1)
+            lengthscale_initial_value = 0.2
+            outputscale_prior = GammaPrior(5.0, 0.5)
+            outputscale_initial_value = 8.0
+            print("Low D priors")
+
+        # DFT optimized priors
+        elif mordred and train_x.shape[-1] < 100:
+            lengthscale_prior = GammaPrior(2.0, 0.2)
+            lengthscale_initial_value = 5.0
+            outputscale_prior = GammaPrior(5.0, 0.5)
+            outputscale_initial_value = 8.0
+            print("DFT optimized priors")
+
+        # Mordred optimized priors
+        elif mordred:
+            lengthscale_prior = GammaPrior(2.0, 0.1)
+            lengthscale_initial_value = 10.0
+            outputscale_prior = GammaPrior(2.0, 0.1)
+            outputscale_initial_value = 10.0
+            print("Mordred optimized priors")
+
+        # OHE optimized priors
+        else:
+            lengthscale_prior = GammaPrior(3.0, 1.0)
+            lengthscale_initial_value = 2.0
+            outputscale_prior = GammaPrior(5.0, 0.2)
+            outputscale_initial_value = 20.0
+            print("OHE optimized priors")
 
 
 def _default_noise_factory(
@@ -94,18 +139,22 @@ def _default_noise_factory(
         searchspace.contains_mordred or searchspace.contains_rdkit
     ) and (train_x.shape[-1] >= 50)
 
-    # low D priors
-    if train_x.shape[-1] < 10:  # <-- different condition compared to EDBO
-        return [GammaPrior(1.05, 0.5), 0.1]
+    # MM: Changed the conditions to match the ones in DefaultKernelFactory
+    return [GammaPrior(1.5, 0.1), 5.0]
 
-    # DFT optimized priors
-    elif uses_descriptors and train_x.shape[-1] < 100:
-        return [GammaPrior(1.5, 0.1), 5.0]
+    # MM: Original code:
+    # # low D priors
+    # if train_x.shape[-1] < 10:  # <-- different condition compared to EDBO
+    #     return [GammaPrior(1.05, 0.5), 0.1]
 
-    # Mordred optimized priors
-    elif uses_descriptors:
-        return [GammaPrior(1.5, 0.1), 5.0]
+    # # DFT optimized priors
+    # elif uses_descriptors and train_x.shape[-1] < 100:
+    #     return [GammaPrior(1.5, 0.1), 5.0]
 
-    # OHE optimized priors
-    else:
-        return [GammaPrior(1.5, 0.1), 5.0]
+    # # Mordred optimized priors
+    # elif uses_descriptors:
+    #     return [GammaPrior(1.5, 0.1), 5.0]
+
+    # # OHE optimized priors
+    # else:
+    #     return [GammaPrior(1.5, 0.1), 5.0]

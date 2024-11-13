@@ -18,6 +18,7 @@ try:  # For python < 3.11, use the exceptiongroup backport
 except NameError:
     from exceptiongroup import ExceptionGroup
 
+VERBOSE = True
 
 Smiles = str
 """Type alias for SMILES strings."""
@@ -145,9 +146,13 @@ class SubstanceParameter(DiscreteParameter):
 
         # Get a decorrelated subset of the descriptors
         if self.decorrelate:
+            if VERBOSE:
+                print(f"\nDecorrelating {self.name} substance features with threshold {self.decorrelate} ...")
+                print(f"Original number of features: {comp_df.shape[1]}")
             if isinstance(self.decorrelate, bool):
                 comp_df = df_uncorrelated_features(comp_df)
             else:
                 comp_df = df_uncorrelated_features(comp_df, threshold=self.decorrelate)
-
+            if VERBOSE:
+                print(f"Number of decorrelated features: {comp_df.shape[1]}\n")
         return comp_df
